@@ -260,21 +260,21 @@ def ccsu_text(case_code):
 @bot.command()
 async def man(ctx):
     await ctx.send(f"# 使用教學\n"
-                   f"dd [z] xDy±jDk (info)                      普通擲骰z次(描述)\n"
-                   f"cc [prob] (info)                           CoC技能檢定(描述)\n"
-                   f"sc [prob] xDy/jDk                          SAN值檢定 成功/失敗\n"
-                   f".ccb z [prob] (info)                       獎勵骰z枚\n"
-                   f".ccp z [prob] (info)                       懲罰骰z枚\n"
-                   f".ccrt                                      暫時性瘋狂\n"
-                   f".ccsu                                      不定期瘋狂\n"
-                   f".sg [x_prob] [x_skill]/[y_prob] [y_skill]  成長檢定\n"
+                   f"dd [z] xDy±jDk (info)                  普通擲骰z次(描述)\n"
+                   f"cc [prob] (info)                   CoC技能檢定(描述)\n"
+                   f"sc [prob] xDy/jDk                  SAN值檢定 成功/失敗\n"
+                   f".ccb z [prob] (info)                   獎勵骰z枚\n"
+                   f".ccp z [prob] (info)                   懲罰骰z枚\n"
+                   f".ccrt                  暫時性瘋狂\n"
+                   f".ccsu                  不定期瘋狂\n"
+                   f".sg [x_prob] [x_skill]/[y_prob] [y_skill]                  成長檢定\n"
                    f".ddr [cc_roll/dd_roll]                     暗骰至KP及自己\n"
                    f".dddr [cc_roll/dd_roll]                    暗骰至KP\n"
-                   f".mkKP                                      設定暗骰指向至自己[需有KP身份組]\n"
-                   f".rmKP                                      消暗骰指向[需有KP身份組]\n"
-                   f".shKP                                      查詢暗骰指向[需有TRPG身份組]\n"
-                   f".trpg                                      取得TRPG身份組\n"
-                   f".ntrpg                                     移除TRPG身份組\n")
+                   f".mkKP                  設定暗骰指向至自己[需有KP身份組]\n"
+                   f".rmKP                  消暗骰指向[需有KP身份組]\n"
+                   f".shKP                  查詢暗骰指向[需有TRPG身份組]\n"
+                   f".trpg                  取得TRPG身份組\n"
+                   f".ntrpg                     移除TRPG身份組\n")
 
 # trpg role
 @bot.command()
