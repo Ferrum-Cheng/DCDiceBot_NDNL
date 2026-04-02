@@ -1,13 +1,9 @@
-import random
-from unittest import case
-
 import discord
 from discord.ext import commands
 import logging
 from dotenv import load_dotenv
 import os
-import webbrowser
-
+import random
 import webserver
 
 load_dotenv()
@@ -22,9 +18,8 @@ bot = commands.Bot(command_prefix = '.', intents = intents)
 
 class MockMsg:
     def __init__(self, content):
-        self.content = content
+        self.content = content\
 
-#skill check
 def coc_check(d_result,prob,cmd):
     if d_result == 1 and prob > 1:
         check_result = "恭喜！大成功！"
@@ -52,7 +47,6 @@ def coc_check(d_result,prob,cmd):
         flag = "≤"
     return check_result, flag
 
-#san check algorithm
 def sc_alg(flag, sc_sus, sc_fail, check_result):
     if flag == "≤":
         sc_dice = sc_sus
@@ -73,7 +67,6 @@ def sc_alg(flag, sc_sus, sc_fail, check_result):
                 deduct_v, deduct_r = roll_dice(sc_fail)
     return sc_dice, deduct_v
 
-#dice function
 def roll_dice(dice_string):
     try:
         #xDy
@@ -104,7 +97,6 @@ def ps_handler(cal_text, step_text, sym):
         step_text += str(sym)
     return cal_text, step_text
 
-#symbol handler
 def sym_handler(dd_msg):
     step_text = cal_text = dd_msg
     if "+" in dd_msg:
@@ -117,7 +109,7 @@ def sym_handler(dd_msg):
         total_result = eval(cal_text)
     return cal_text, step_text, total_result
 
-def cc_fuction(msg, bp_flag = None, bp_num = 0, bp_text =""):
+def cc_fuction(msg, bp_flag = None, bp_num = 0, bp_text = ""):
     spell = msg.content.split(" ")
     cc_cmd = spell[0]
     prob = int(spell[1])
@@ -133,11 +125,12 @@ def cc_fuction(msg, bp_flag = None, bp_num = 0, bp_text =""):
             b_comp = min(bp_rolls)
             org_result = d_result
             if b_comp < d_comp:
-                d_result = int(b_comp * 10) + int(d_result) % 10
+                d_result = (b_comp * 10) + (org_result % 10)
         elif bp_flag == "p":
             p_comp = max(bp_rolls)
+            org_result = d_result
             if p_comp > d_comp:
-                d_result = int(p_comp * 10) * int(d_result) % 10
+                d_result = (p_comp * 10) + (org_result % 10)
         bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
     check_result, flag = coc_check(d_result, prob, cc_cmd)
     return (f"CC {prob}{info}{bp_text}\n"
@@ -189,6 +182,14 @@ def sc_fuction(msg):
                                    f"結果：{check_result}\n"
                                    f"{sc_dice}\n"
                                    f"{prob} - {deduct_v} → {after_sc}")
+
+def dr_proc(text):
+    msg = MockMsg(text)
+    if "cc" in text:
+        text2user = cc_fuction(msg)
+    elif "dd" in text:
+        text2user = sc_fuction(msg)
+    return text2user
 
 def ccrt_text(case_code):
     match case_code:
@@ -291,7 +292,9 @@ async def man(ctx):
                    f"### .ntrpg\n"
                    f"移除TRPG身份組\n")
 
-# trpg role
+grp_KP_mn = None
+grp_KP_id = None
+
 @bot.command()
 async def trpg(ctx):
     role = discord.utils.get(ctx.guild.roles, name="TRPG")
@@ -301,7 +304,6 @@ async def trpg(ctx):
     else:
         await ctx.send("伺服器上沒有TRPG身份組")
 
-# remove trpg role
 @bot.command()
 async def ntrpg(ctx):
     role = discord.utils.get(ctx.guild.roles, name="TRPG")
@@ -311,9 +313,6 @@ async def ntrpg(ctx):
     else:
         await ctx.send("伺服器上沒有TRPG身份組")
 
-grp_KP_mn = None
-grp_KP_id = None
-# set KP for roll
 @bot.command()
 @commands.has_role("KP")
 async def mkKP(ctx):
@@ -329,13 +328,6 @@ async def rmKP(ctx):
     grp_KP_mn = grp_KP_id = None
     await ctx.send(f"暗骰指向已取消")
 
-@mkKP.error
-@rmKP.error
-async def KP_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send("你不是KP!")
-
-# show KP
 @bot.command()
 @commands.has_role("TRPG")
 async def shKP(ctx):
@@ -344,36 +336,29 @@ async def shKP(ctx):
     else:
         await ctx.send(f"暗骰已設定至{grp_KP_mn}")
 
-@shKP.error
-async def shKP_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        await ctx.send(f"{ctx.author.mention}你不是TRPG玩家!")
-
 @bot.command()
 async def ddr(ctx, *, text):
-    msg = MockMsg(text)
-    if "cc" in text:
-        text2user = cc_fuction(msg)
-    elif "dd" in text:
-        text2user = sc_fuction(msg)
-    KP = await bot.fetch_user(grp_KP_id)
-    await KP.send(f"{ctx.author.mention}的暗骰\n"
-                  f"{text2user}")
-    await ctx.author.send(f"{ctx.author.mention}的暗骰\n"
-                          f"{text2user}")
-    await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}及{ctx.author.mention}的DM")
+    if grp_KP_mn is None:
+        await ctx.send(f"沒有KP被設定")
+    else:
+        text2user = dr_proc(text)
+        KP = await bot.fetch_user(grp_KP_id)
+        await KP.send(f"{ctx.author.mention}的暗骰\n"
+                      f"{text2user}")
+        await ctx.author.send(f"{ctx.author.mention}的暗骰\n"
+                              f"{text2user}")
+        await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}及{ctx.author.mention}的DM")
 
 @bot.command()
 async def dddr(ctx, *, text):
-    msg = MockMsg(text)
-    if "cc" in text:
-        text2user = cc_fuction(msg)
-    elif "dd" in text:
-        text2user = sc_fuction(msg)
-    KP = await bot.fetch_user(grp_KP_id)
-    await KP.send(f"{ctx.author.mention}的暗骰\n"
-                  f"{text2user}")
-    await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}的DM")
+    if grp_KP_mn is None:
+        await ctx.send(f"沒有KP被設定")
+    else:
+        text2user = dr_proc(text)
+        KP = await bot.fetch_user(grp_KP_id)
+        await KP.send(f"{ctx.author.mention}的暗骰\n"
+                      f"{text2user}")
+        await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}的DM")
 
 @bot.command()
 async def ccb(ctx, *, text):
@@ -394,27 +379,11 @@ async def ccp(ctx, *, text):
     p_num = int(msg[0])
     spell = "cc " + str(msg[1])
     try:
-        spell += " " + str(msg[3])
+        spell += " " + str(msg[2])
     except IndexError:
         spell += ""
     text2user = cc_fuction(MockMsg(spell),"p", p_num)
     await ctx.send(f"{ctx.author.mention}\n"
-                   f"{text2user}")
-
-@bot.command()
-async def ccrt(ctx):
-    case_code = random.randint(1, 10)
-    text2user = ccrt_text(case_code)
-    await ctx.send(f"{ctx.author.mention}\n"
-                   f"{case_code}"
-                   f"{text2user}")
-
-@bot.command()
-async def ccsu(ctx):
-    case_code = random.randint(1, 10)
-    text2user = ccsu_text(case_code)
-    await ctx.send(f"{ctx.author.mention}\n"
-                   f"{case_code}"
                    f"{text2user}")
 
 @bot.command()
@@ -438,6 +407,33 @@ async def sg(ctx, *, text):
                           f"保持：{prob}\n")
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
+
+@bot.command()
+async def ccrt(ctx):
+    case_code = random.randint(1, 10)
+    text2user = ccrt_text(case_code)
+    await ctx.send(f"{ctx.author.mention}\n"
+                   f"{case_code}"
+                   f"{text2user}")
+
+@bot.command()
+async def ccsu(ctx):
+    case_code = random.randint(1, 10)
+    text2user = ccsu_text(case_code)
+    await ctx.send(f"{ctx.author.mention}\n"
+                   f"{case_code}"
+                   f"{text2user}")
+
+@shKP.error
+async def shKP_error(ctx, error):
+    if isinstance(error, commands.MissingRole):
+        await ctx.send(f"{ctx.author.mention}你不是TRPG玩家!")
+
+@mkKP.error
+@rmKP.error
+async def KP_error(ctx, error):
+    if isinstance(error, commands.MissingRole):
+        await ctx.send("你不是KP!")
 
 @bot.event
 async def on_ready():
