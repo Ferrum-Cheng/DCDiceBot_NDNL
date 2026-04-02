@@ -473,6 +473,5 @@ async def on_message(message):
     await bot.process_commands(message)
 
 webserver.keep_alive()
-webserver.ping()
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
