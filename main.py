@@ -36,10 +36,10 @@ def coc_check(d_result,prob,cmd):
     elif d_result > prob:
         check_result = "失敗！"
         flag = ">"
-    elif d_result < int(prob / 5):
+    elif d_result <= int(prob / 5):
         check_result = "極限成功！"
         flag = "≤"
-    elif d_result < int(prob / 2):
+    elif d_result <= int(prob / 2):
         check_result = "困難成功！"
         flag = "≤"
     else:
