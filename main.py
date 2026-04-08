@@ -257,7 +257,9 @@ def ccsu_text(case_code):
         case 10:
             return (f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)")
 
-def bd7_main(code,f_total = "", f_rolls = ""):
+def bd7_main(code):
+    f_total = []
+    f_rolls = []
     if code == "":
         x = 5
         y = 3
@@ -267,18 +269,19 @@ def bd7_main(code,f_total = "", f_rolls = ""):
 
     for i in range(x):
         total, rolls = roll_dice("3d6")
-        f_total[i] = str(total * 5)
-        f_rolls[i] = str(rolls) + "×5"
+        f_rolls.append(str(rolls) + "×5")
+        f_total.append(str(total * 5))
     for i in range(y):
         total, rolls = roll_dice("2d6")
-        f_total[i+x] = str((total + 6) * 5)
-        f_rolls[i+x] = "(" + str(rolls) + "+6)" + "×5"
+        f_rolls.append("{" + str(rolls) + "+6}" + "×5")
+        f_total.append(str((total + 6) * 5))
     for i in range(z):
         total, rolls = roll_dice("3d6")
-        f_total[i+x+y] = str(total * 5)
-        f_rolls[i+x+y] = str(rolls) + "×5"
+        f_rolls.append(str(rolls) + "×5")
+        f_total.append(str(total * 5))
     if x == 5 and y == 3 and z == 1:
-        buildtxt = (f"STR：{f_rolls[0]} = {f_total[0]}\n"
+        buildtxt = (f"=============\n"
+                    f"STR：{f_rolls[0]} = {f_total[0]}\n"
                     f"CON：{f_rolls[1]} = {f_total[1]}\n"
                     f"DEX：{f_rolls[2]} = {f_total[2]}\n"
                     f"APP：{f_rolls[3]} = {f_total[3]}\n"
@@ -288,22 +291,21 @@ def bd7_main(code,f_total = "", f_rolls = ""):
                     f"SIZ：{f_rolls[6]} = {f_total[6]}\n"
                     f"EDU：{f_rolls[7]} = {f_total[7]}\n"
                     f"=============\n"
-                    f"LUK：{f_rolls[8]} = {f_total[8]}\n")
+                    f"LUK：{f_rolls[8]} = {f_total[8]}\n"
+                    f"=============\n")
     else:
         buildtxt = f"自由分配屬性點數\n"
-        buildtxt += f"===3D6 for STR,CON,DEX,APP,POW===\n"
+        buildtxt += f"=== 3D6 for STR, CON, DEX, APP, POW ===\n"
         for j in range(x):
             buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
+        buildtxt += f"=== 2D6+6 for INT, SIZ, EDU ===\n"
+        for j in range(y):
+            buildtxt += f"{f_rolls[j+x]} = {f_total[j+x]}\n"
+        buildtxt += f"=== 3D6 for LUK ===\n"
+        for j in range(z):
+            buildtxt += f"{f_rolls[j+x+y]} = {f_total[j+x+y]}\n"
         buildtxt += f"=============\n"
-        buildtxt += f"===2d6+6 for INT,SIZ,EDU===\n"
-        for j in range(x):
-            buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
-        buildtxt += f"=============\n"
-        buildtxt += f"===3D6 for LUK===\n"
-        for j in range(x):
-            buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
-        buildtxt += f"=============\n"
-        return buildtxt
+    return buildtxt
 
 #manual
 @bot.command()
@@ -459,7 +461,7 @@ async def sg(ctx, *, text):
                    f"{text2user}")
 
 @bot.command()
-async def cc7bd(ctx, *, text):
+async def cc7bd(ctx, text=""):
     text2user = bd7_main(text)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
