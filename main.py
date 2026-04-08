@@ -89,7 +89,7 @@ def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
     except IndexError:
         info = ""  # if no info
     d_result, d_rolls = roll_dice("1d100")
-    if bp_flag != None:
+    if bp_flag == "b" or bp_flag == "p":
         bp_rolls = [random.randint(0, 9) for _ in range(bp_num)]
         d_comp = int(d_result) / 10
         if bp_flag == "b":
@@ -194,68 +194,53 @@ def dr_proc(text):
 def ccrt_text(case_code):
     match case_code:
         case 1:
-            return (f"昏厥或尖叫")
+            return f"昏厥或尖叫"
         case 2:
-            return (f"驚慌失措地逃跑")
+            return f"驚慌失措地逃跑"
         case 3:
-            return (f"歇斯底里或情緒爆發(狂笑、哭泣等等)")
+            return f"歇斯底里或情緒爆發(狂笑、哭泣等等)"
         case 4:
-            return (f"發出嬰兒般的咿呀聲，說話無條理、速語症、多語症")
+            return f"發出嬰兒般的咿呀聲，說話無條理、速語症、多語症"
         case 5:
-            return (f"強烈恐懼症，可能會定在當場不能動彈")
+            return f"強烈恐懼症，可能會定在當場不能動彈"
         case 6:
-            return (f"殺人傾向或自殺傾向")
+            return f"殺人傾向或自殺傾向"
         case 7:
-            return (f"出現幻覺或妄想症")
+            return f"出現幻覺或妄想症"
         case 8:
-            return (f"不自覺地模仿旁人的動作")
+            return f"不自覺地模仿旁人的動作"
         case 9:
-            return (f"奇怪的食欲(泥土、黏土、人肉)")
+            return f"奇怪的食欲(泥土、黏土、人肉)"
         case 10:
-            return (f"恍惚(像胎兒一樣蜷縮起來，忘記一切)或緊張型精神分裂(對一切失去興趣，必須有別人引導，否則無法進行任何獨立行動)")
-        case 11:
-            return (f"記憶缺失、健忘(症)或恍惚/緊張症")
-        case 12:
-            return (f"嚴重的恐懼症(可能逃跑，或將所有東西都看成害怕的東西)")
-        case 13:
-            return (f"幻覺")
-        case 14:
-            return (f"奇怪的性取向(裸露癖、女子淫狂/男子淫狂等)")
-        case 15:
-            return (f"找到了某樣「幸運符」(把某樣飾品、器物甚至某人當作安全毯)，如果遠離就會一事無成")
-        case 16:
-            return (f"無法控制地抽搐、顫抖，無法藉由語言或書寫交談")
-        case 17:
-            return (f"精神性的失明、失聰，或某個肢體無法使用")
-        case 18:
-            return (f"反應性精神障礙(語無倫次、幻覺、妄想症或行為異常)")
-        case 19:
-            return (f"暫時的偏執狂")
-        case 20:
-            return (f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)")
+            return f"恍惚(像胎兒一樣蜷縮起來，忘記一切)或緊張型精神分裂(對一切失去興趣，必須有別人引導，否則無法進行任何獨立行動)"
+        case _:
+            return None
+
 
 def ccsu_text(case_code):
     match case_code:
         case 1:
-            return (f"記憶缺失、健忘(症)或恍惚/緊張症")
+            return f"記憶缺失、健忘(症)或恍惚/緊張症"
         case 2:
-            return (f"嚴重的恐懼症(可能逃跑，或將所有東西都看成害怕的東西)")
+            return f"嚴重的恐懼症(可能逃跑，或將所有東西都看成害怕的東西)"
         case 3:
-            return (f"幻覺")
+            return f"幻覺"
         case 4:
-            return (f"奇怪的性取向(裸露癖、女子淫狂/男子淫狂等)")
+            return f"奇怪的性取向(裸露癖、女子淫狂/男子淫狂等)"
         case 5:
-            return (f"找到了某樣「幸運符」(把某樣飾品、器物甚至某人當作安全毯)，如果遠離就會一事無成")
+            return f"找到了某樣「幸運符」(把某樣飾品、器物甚至某人當作安全毯)，如果遠離就會一事無成"
         case 6:
-            return (f"無法控制地抽搐、顫抖，無法藉由語言或書寫交談")
+            return f"無法控制地抽搐、顫抖，無法藉由語言或書寫交談"
         case 7:
-            return (f"精神性的失明、失聰，或某個肢體無法使用")
+            return f"精神性的失明、失聰，或某個肢體無法使用"
         case 8:
-            return (f"反應性精神障礙(語無倫次、幻覺、妄想症或行為異常)")
+            return f"反應性精神障礙(語無倫次、幻覺、妄想症或行為異常)"
         case 9:
-            return (f"暫時的偏執狂")
+            return f"暫時的偏執狂"
         case 10:
-            return (f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)")
+            return f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)"
+        case _:
+            return None
 
 def bd7_main(code):
     f_total = []
@@ -345,7 +330,7 @@ async def man(ctx):
                    f"移除TRPG身份組\n")
 
 grp_KP_mn = None
-grp_KP_id = None
+grp_KP_id = 0
 
 @bot.command()
 async def trpg(ctx):

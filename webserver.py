@@ -7,7 +7,7 @@ def home():
     return "不可以骰骰 is ready"
 
 def run():
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 
 def keep_alive():
     t = Thread(target=run)
