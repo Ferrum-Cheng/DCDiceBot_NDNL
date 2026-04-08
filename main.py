@@ -80,6 +80,63 @@ def roll_dice(dice_string):
     except ValueError:
         return None, "Invalid format. Use XdY (e.g., 2d6)"
 
+def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
+    spell = msg.content.split(" ")
+    cc_cmd = spell[0]
+    prob = int(spell[1])
+    try:
+        info = "：" + str(spell[2])
+    except IndexError:
+        info = ""  # if no info
+    d_result, d_rolls = roll_dice("1d100")
+    if bp_flag != None:
+        bp_rolls = [random.randint(0, 9) for _ in range(bp_num)]
+        d_comp = int(d_result) / 10
+        if bp_flag == "b":
+            b_comp = min(bp_rolls)
+            org_result = d_result
+            if b_comp < d_comp:
+                d_result = (b_comp * 10) + (org_result % 10)
+        elif bp_flag == "p":
+            p_comp = max(bp_rolls)
+            org_result = d_result
+            if p_comp > d_comp:
+                d_result = (p_comp * 10) + (org_result % 10)
+        bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
+    check_result, flag = coc_check(d_result, prob, cc_cmd)
+    return (f"CC {prob}{info}{bp_text}\n"
+            f"{d_result} {flag} {prob}\n"
+            f"結果：{check_result}")
+
+def dd_main(msg, text2user =""):
+    spell = msg.content.lower().split(" ")
+    if "d" in spell[1]:
+        dd_num = 1
+        dd_msg = spell[1]
+        try:
+            info = "：" + str(spell[2])
+        except IndexError:
+            info = ""  # if no info
+    else:
+        dd_num = int(spell[1])
+        dd_msg = spell[2]
+        try:
+            info = "：" + str(spell[3])
+        except IndexError:
+            info = ""  # if no info
+    for x in range(dd_num):
+        if ("+" or "-") in dd_msg:
+            cal_text, step_text, total_result = sym_handler(dd_msg)
+            text2user += (f"#{x + 1} {dd_msg}{info}\n"
+                         f"{step_text} = {cal_text}\n"
+                         f"={total_result}\n")
+        else:
+            total, rolls = roll_dice(dd_msg)
+            text2user += (f"#{x + 1} {dd_msg}{info}\n"
+                         f"{rolls}\n"
+                         f"={total}\n")
+    return text2user
+
 def ps_handler(cal_text, step_text, sym):
     ps_cal = cal_text.split(str(sym))
     ps_step = step_text.split(str(sym))
@@ -109,63 +166,6 @@ def sym_handler(dd_msg):
         total_result = eval(cal_text)
     return cal_text, step_text, total_result
 
-def cc_fuction(msg, bp_flag = None, bp_num = 0, bp_text = ""):
-    spell = msg.content.split(" ")
-    cc_cmd = spell[0]
-    prob = int(spell[1])
-    try:
-        info = "：" + str(spell[2])
-    except IndexError:
-        info = ""  # if no info
-    d_result, d_rolls = roll_dice("1d100")
-    if bp_flag != None:
-        bp_rolls = [random.randint(0, 9) for _ in range(bp_num)]
-        d_comp = int(d_result) / 10
-        if bp_flag == "b":
-            b_comp = min(bp_rolls)
-            org_result = d_result
-            if b_comp < d_comp:
-                d_result = (b_comp * 10) + (org_result % 10)
-        elif bp_flag == "p":
-            p_comp = max(bp_rolls)
-            org_result = d_result
-            if p_comp > d_comp:
-                d_result = (p_comp * 10) + (org_result % 10)
-        bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
-    check_result, flag = coc_check(d_result, prob, cc_cmd)
-    return (f"CC {prob}{info}{bp_text}\n"
-            f"{d_result} {flag} {prob}\n"
-            f"結果：{check_result}")
-
-def dd_fuction(msg, text2user = ""):
-    spell = msg.content.lower().split(" ")
-    if "d" in spell[1]:
-        dd_num = 1
-        dd_msg = spell[1]
-        try:
-            info = "：" + str(spell[2])
-        except IndexError:
-            info = ""  # if no info
-    else:
-        dd_num = int(spell[1])
-        dd_msg = spell[2]
-        try:
-            info = "：" + str(spell[3])
-        except IndexError:
-            info = ""  # if no info
-    for x in range(dd_num):
-        if ("+" or "-") in dd_msg:
-            cal_text, step_text, total_result = sym_handler(dd_msg)
-            text2user += (f"#{x + 1} {dd_msg}{info}\n"
-                         f"{step_text} = {cal_text}\n"
-                         f"={total_result}\n")
-        else:
-            total, rolls = roll_dice(dd_msg)
-            text2user += (f"#{x + 1} {dd_msg}{info}\n"
-                         f"{rolls}\n"
-                         f"={total}\n")
-    return text2user
-
 def sc_fuction(msg):
     spell = msg.content.split(" ")
     sc_cmd = spell[0]
@@ -186,7 +186,7 @@ def sc_fuction(msg):
 def dr_proc(text):
     msg = MockMsg(text)
     if "cc" in text:
-        text2user = cc_fuction(msg)
+        text2user = cc_main(msg)
     elif "dd" in text:
         text2user = sc_fuction(msg)
     return text2user
@@ -257,7 +257,55 @@ def ccsu_text(case_code):
         case 10:
             return (f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)")
 
-# manual
+def bd7_main(code,f_total = "", f_rolls = ""):
+    if code == "":
+        x = 5
+        y = 3
+        z = 1
+    else:
+        x, y, z = list(map(int, code))
+
+    for i in range(x):
+        total, rolls = roll_dice("3d6")
+        f_total[i] = str(total * 5)
+        f_rolls[i] = str(rolls) + "×5"
+    for i in range(y):
+        total, rolls = roll_dice("2d6")
+        f_total[i+x] = str((total + 6) * 5)
+        f_rolls[i+x] = "(" + str(rolls) + "+6)" + "×5"
+    for i in range(z):
+        total, rolls = roll_dice("3d6")
+        f_total[i+x+y] = str(total * 5)
+        f_rolls[i+x+y] = str(rolls) + "×5"
+    if x == 5 and y == 3 and z == 1:
+        buildtxt = (f"STR：{f_rolls[0]} = {f_total[0]}\n"
+                    f"CON：{f_rolls[1]} = {f_total[1]}\n"
+                    f"DEX：{f_rolls[2]} = {f_total[2]}\n"
+                    f"APP：{f_rolls[3]} = {f_total[3]}\n"
+                    f"POW：{f_rolls[4]} = {f_total[4]}\n"
+                    f"=============\n"
+                    f"INT：{f_rolls[5]} = {f_total[5]}\n"
+                    f"SIZ：{f_rolls[6]} = {f_total[6]}\n"
+                    f"EDU：{f_rolls[7]} = {f_total[7]}\n"
+                    f"=============\n"
+                    f"LUK：{f_rolls[8]} = {f_total[8]}\n")
+    else:
+        buildtxt = f"自由分配屬性點數\n"
+        buildtxt += f"===3D6 for STR,CON,DEX,APP,POW===\n"
+        for j in range(x):
+            buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
+        buildtxt += f"=============\n"
+        buildtxt += f"===2d6+6 for INT,SIZ,EDU===\n"
+        for j in range(x):
+            buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
+        buildtxt += f"=============\n"
+        buildtxt += f"===3D6 for LUK===\n"
+        for j in range(x):
+            buildtxt += f"{f_rolls[j]} = {f_total[j]}\n"
+        buildtxt += f"=============\n"
+        return buildtxt
+
+#manual
 @bot.command()
 async def man(ctx):
     await ctx.send(f"# 使用教學\n"
@@ -281,6 +329,8 @@ async def man(ctx):
                    f"暗骰至KP及自己\n"
                    f"### .dddr [cc_roll/dd_roll]\n"
                    f"暗骰至KP\n"
+                   f"### .cc7bd (xyz)\n"
+                   f"CoC7th創角\n"
                    f"### .mkKP\n"
                    f"設定暗骰指向至自己[需有KP身份組]\n"
                    f"### .rmKP\n"
@@ -369,7 +419,7 @@ async def ccb(ctx, *, text):
         spell += " " + str(msg[2])
     except IndexError:
         spell += ""
-    text2user = cc_fuction(MockMsg(spell),"b", b_num)
+    text2user = cc_main(MockMsg(spell), "b", b_num)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
@@ -382,7 +432,7 @@ async def ccp(ctx, *, text):
         spell += " " + str(msg[2])
     except IndexError:
         spell += ""
-    text2user = cc_fuction(MockMsg(spell),"p", p_num)
+    text2user = cc_main(MockMsg(spell), "p", p_num)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
@@ -405,6 +455,12 @@ async def sg(ctx, *, text):
             text2user += (f"技能成長：{msg[1]}\n"
                           f"{roll} > {prob}：成長失敗\n"
                           f"保持：{prob}\n")
+    await ctx.send(f"{ctx.author.mention}\n"
+                   f"{text2user}")
+
+@bot.command()
+async def cc7bd(ctx, *, text):
+    text2user = bd7_main(text)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
@@ -447,7 +503,7 @@ async def on_message(message):
     #coc skill check
     if message.content.startswith("cc"):
         msg = message
-        text2user = cc_fuction(msg)
+        text2user = cc_main(msg)
         await message.channel.send(f"{message.author.mention}\n"
                                    f"{text2user}")
 
@@ -462,7 +518,7 @@ async def on_message(message):
     #roll
     if message.content.startswith("dd"):
         msg = message
-        text2user = dd_fuction(msg)
+        text2user = dd_main(msg)
         await message.channel.send(f"{message.author.mention}\n"
                                    f"{text2user}")
 
