@@ -509,7 +509,6 @@ async def on_message(message):
         await message.channel.send(f"{message.author.mention}\n"
                                    f"{text2user}")
 
-
     #san check
     if message.content.startswith("sc"):
         msg = message
