@@ -47,27 +47,6 @@ def coc_check(d_result,prob,cmd):
         flag = "≤"
     return check_result, flag
 
-def sc_alg(flag, sc_sus, sc_fail, check_result):
-    if flag == "≤":
-        sc_dice = sc_sus
-        if "d" not in sc_sus:
-            deduct_v = int(sc_sus)
-        else:
-            deduct_v, deduct_r = roll_dice(sc_sus)
-    elif flag == ">":
-        sc_dice = sc_fail
-        if "d" not in sc_fail:
-            deduct_v = int(sc_fail)
-        else:
-            if check_result == "大失敗！":
-                sc_dice = sc_fail.lower().split('d')
-                deduct_v = sc_dice[1]
-                deduct_r = "[" + str(sc_dice[1]) + "]"
-                sc_dice = "最大值：" + str(deduct_v)
-            else:
-                deduct_v, deduct_r = roll_dice(sc_fail)
-    return sc_dice, deduct_r , deduct_v
-
 def roll_dice(dice_string):
     try:
         #xDy
@@ -128,14 +107,14 @@ def dd_main(msg, text2user =""):
     for x in range(dd_num):
         if ("+" or "-") in dd_msg:
             cal_text, step_text, total_result = sym_handler(dd_msg)
-            text2user += (f"#{x + 1} {dd_msg}{info}\n"
-                         f"{step_text} = {cal_text}\n"
-                         f"={total_result}\n")
+            text2user = (f"#{x + 1} {dd_msg}{info}\n"
+                        f"{step_text} = {cal_text}\n"
+                        f"={total_result}\n")
         else:
             total, rolls = roll_dice(dd_msg)
-            text2user += (f"#{x + 1} {dd_msg}{info}\n"
-                         f"{rolls}\n"
-                         f"={total}\n")
+            text2user = (f"#{x + 1} {dd_msg}{info}\n"
+                        f"{rolls}\n"
+                        f"={total}\n")
     return text2user
 
 def ps_handler(cal_text, step_text, sym):
@@ -166,6 +145,38 @@ def sym_handler(dd_msg):
     if "d" not in cal_text:
         total_result = eval(cal_text)
     return cal_text, step_text, total_result
+
+def sc_alg(flag, sc_sus, sc_fail, check_result):
+    if flag == "≤":
+        sc_dice = sc_sus
+        if "d" not in sc_sus:
+            deduct_v = int(sc_sus)
+        else:
+            if ("+" or "-") in sc_sus:
+                cal_text, deduct_r, deduct_v = sym_handler(sc_sus)
+            else:
+                deduct_v, deduct_r = roll_dice(sc_sus)
+    elif flag == ">":
+        sc_dice = sc_fail
+        if "d" not in sc_fail:
+            deduct_v = int(sc_fail)
+        else:
+            if check_result == "大失敗！":
+                sc_dice = sc_fail.lower().split('d')
+                try:
+                    cal_text = sc_dice.split('+')
+                except IndexError:
+                    cal_text[0] = sc_dice[1]
+                    cal_text[1] = 0
+                deduct_v = (int(cal_text[0]) * int(sc_dice[0])) + int(cal_text[1])
+                deduct_r = "[" + str(sc_dice[1]) + "]"
+                sc_dice = "最大值：" + str(deduct_v)
+            else:
+                if ("+" or "-") in sc_sus:
+                    cal_text, deduct_r, deduct_v = sym_handler(sc_sus)
+                else:
+                    deduct_v, deduct_r = roll_dice(sc_sus)
+    return sc_dice, deduct_r , deduct_v
 
 def sc_fuction(msg):
     spell = msg.content.split(" ")
