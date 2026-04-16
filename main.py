@@ -216,7 +216,6 @@ def ccrt_text(case_code):
         case _:
             return None
 
-
 def ccsu_text(case_code):
     match case_code:
         case 1:
@@ -456,7 +455,7 @@ async def ccrt(ctx):
     case_code = random.randint(1, 10)
     text2user = ccrt_text(case_code)
     await ctx.send(f"{ctx.author.mention}\n"
-                   f"{case_code}"
+                   f"#{case_code} "
                    f"{text2user}")
 
 @bot.command()
@@ -464,7 +463,7 @@ async def ccsu(ctx):
     case_code = random.randint(1, 10)
     text2user = ccsu_text(case_code)
     await ctx.send(f"{ctx.author.mention}\n"
-                   f"{case_code}"
+                   f"#{case_code} "
                    f"{text2user}")
 
 @shKP.error
