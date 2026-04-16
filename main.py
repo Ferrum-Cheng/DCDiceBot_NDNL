@@ -18,7 +18,7 @@ bot = commands.Bot(command_prefix = '.', intents = intents)
 
 class MockMsg:
     def __init__(self, content):
-        self.content = content\
+        self.content = content
 
 def coc_check(d_result,prob,cmd):
     if d_result == 1 and prob > 1:
