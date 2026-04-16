@@ -62,10 +62,11 @@ def sc_alg(flag, sc_sus, sc_fail, check_result):
             if check_result == "大失敗！":
                 sc_dice = sc_fail.lower().split('d')
                 deduct_v = sc_dice[1]
+                deduct_r = "[" + str(sc_dice[1]) + "]"
                 sc_dice = "最大值：" + str(deduct_v)
             else:
                 deduct_v, deduct_r = roll_dice(sc_fail)
-    return sc_dice, deduct_v
+    return sc_dice, deduct_r , deduct_v
 
 def roll_dice(dice_string):
     try:
@@ -175,12 +176,12 @@ def sc_fuction(msg):
     sc_fail = sc_statement[1]
     sc_value, sc_rolls = roll_dice("1d100")
     check_result, flag = coc_check(sc_value, prob, sc_cmd)
-    sc_dice, deduct_v = sc_alg(flag, sc_sus, sc_fail, check_result)
+    sc_dice, deduct_r, deduct_v = sc_alg(flag, sc_sus, sc_fail, check_result)
     after_sc = prob - deduct_v
     return (f"San Check {prob}：{sc_sus}/{sc_fail}\n"
                                    f"{sc_value} {flag} {prob}\n"
                                    f"結果：{check_result}\n"
-                                   f"{sc_dice}\n"
+                                   f"{sc_dice} {deduct_r}\n"
                                    f"{prob} - {deduct_v} → {after_sc}")
 
 def dr_proc(text):
@@ -301,9 +302,9 @@ async def man(ctx):
                    f"CoC技能檢定(描述)\n"
                    f"### sc [prob] xDy/jDk\n"
                    f"SAN值檢定 成功/失敗\n"
-                   f"### .ccb z [prob] (info)\n"
+                   f"### .ccb [z] [prob] (info)\n"
                    f"獎勵骰z枚\n"
-                   f"### .ccp z [prob] (info)\n"
+                   f"### .ccp [z] [prob] (info)\n"
                    f"懲罰骰z枚\n"
                    f"### .ccrt\n"
                    f"暫時性瘋狂\n"
