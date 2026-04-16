@@ -4,7 +4,7 @@ import logging
 from dotenv import load_dotenv
 import os
 import random
-import webserver
+#import webserver
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -59,6 +59,35 @@ def roll_dice(dice_string):
         return total, rolls
     except ValueError:
         return None, "Invalid format. Use XdY (e.g., 2d6)"
+
+def ps_handler(cal_text, step_text, sym):
+    ps_cal = cal_text.split(str(sym))
+    ps_step = step_text.split(str(sym))
+    step_text = cal_text = ""
+    for x in range(len(ps_cal)):
+        if "d" not in ps_cal[x]:
+            step_text += str(ps_step[x])
+        else:
+            ps_total, ps_rolls = roll_dice(str(ps_cal[x]))
+            ps_cal[x] = ps_total
+            step_text += str(ps_rolls)
+        cal_text += str(ps_cal[x])
+        if x == len(ps_cal) - 1: break
+        cal_text += str(sym)
+        step_text += str(sym)
+    return cal_text, step_text
+
+def sym_handler(dd_msg):
+    step_text = cal_text = dd_msg
+    if "+" in dd_msg:
+        sym = "+"
+        cal_text, step_text = ps_handler(cal_text,step_text,sym)
+    if "-" in dd_msg:
+        sym = "-"
+        cal_text, step_text = ps_handler(cal_text,step_text,sym)
+    if "d" not in cal_text:
+        total_result = eval(cal_text)
+    return cal_text, step_text, total_result
 
 def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
     spell = msg.content.split(" ")
@@ -117,40 +146,12 @@ def dd_main(msg, text2user =""):
                         f"={total}\n")
     return text2user
 
-def ps_handler(cal_text, step_text, sym):
-    ps_cal = cal_text.split(str(sym))
-    ps_step = step_text.split(str(sym))
-    step_text = cal_text = ""
-    for x in range(len(ps_cal)):
-        if "d" not in ps_cal[x]:
-            step_text += str(ps_step[x])
-        else:
-            ps_total, ps_rolls = roll_dice(str(ps_cal[x]))
-            ps_cal[x] = ps_total
-            step_text += str(ps_rolls)
-        cal_text += str(ps_cal[x])
-        if x == len(ps_cal) - 1: break
-        cal_text += str(sym)
-        step_text += str(sym)
-    return cal_text, step_text
-
-def sym_handler(dd_msg):
-    step_text = cal_text = dd_msg
-    if "+" in dd_msg:
-        sym = "+"
-        cal_text, step_text = ps_handler(cal_text,step_text,sym)
-    if "-" in dd_msg:
-        sym = "-"
-        cal_text, step_text = ps_handler(cal_text,step_text,sym)
-    if "d" not in cal_text:
-        total_result = eval(cal_text)
-    return cal_text, step_text, total_result
-
 def sc_alg(flag, sc_sus, sc_fail, check_result):
     if flag == "≤":
         sc_dice = sc_sus
         if "d" not in sc_sus:
             deduct_v = int(sc_sus)
+            deduct_r = "[" + str(deduct_v) + "]"
         else:
             if ("+" or "-") in sc_sus:
                 cal_text, deduct_r, deduct_v = sym_handler(sc_sus)
@@ -160,6 +161,7 @@ def sc_alg(flag, sc_sus, sc_fail, check_result):
         sc_dice = sc_fail
         if "d" not in sc_fail:
             deduct_v = int(sc_fail)
+            deduct_r = "[" + str(deduct_v) + "]"
         else:
             if check_result == "大失敗！":
                 sc_dice = sc_fail.lower().split('d')
@@ -172,10 +174,10 @@ def sc_alg(flag, sc_sus, sc_fail, check_result):
                 deduct_r = "[" + str(sc_dice[1]) + "]"
                 sc_dice = "最大值：" + str(deduct_v)
             else:
-                if ("+" or "-") in sc_sus:
-                    cal_text, deduct_r, deduct_v = sym_handler(sc_sus)
+                if ("+" or "-") in sc_fail:
+                    cal_text, deduct_r, deduct_v = sym_handler(sc_fail)
                 else:
-                    deduct_v, deduct_r = roll_dice(sc_sus)
+                    deduct_v, deduct_r = roll_dice(sc_fail)
     return sc_dice, deduct_r , deduct_v
 
 def sc_fuction(msg):
@@ -192,7 +194,7 @@ def sc_fuction(msg):
     return (f"San Check {prob}：{sc_sus}/{sc_fail}\n"
                                    f"{sc_value} {flag} {prob}\n"
                                    f"結果：{check_result}\n"
-                                   f"{sc_dice} {deduct_r}\n"
+                                   f"{sc_dice}     {deduct_r}\n"
                                    f"{prob} - {deduct_v} → {after_sc}")
 
 def dr_proc(text):
@@ -521,6 +523,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-webserver.keep_alive()
+#webserver.keep_alive()
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
