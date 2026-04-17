@@ -4,7 +4,7 @@ import logging
 from dotenv import load_dotenv
 import os
 import random
-#import webserver
+import webserver
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -523,6 +523,6 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-#webserver.keep_alive()
+webserver.keep_alive()
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
