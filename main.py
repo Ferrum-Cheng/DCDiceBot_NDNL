@@ -6,7 +6,7 @@ import os
 import random
 
 import kp_cog
-import core_cog
+import core
 import webserver
 
 load_dotenv()
@@ -31,7 +31,7 @@ def ps_handler(cal_text, step_text, sym):
         if "d" not in ps_cal[x]:
             step_text += str(ps_step[x])
         else:
-            ps_total, ps_rolls = core_cog.roll_dice(str(ps_cal[x]))
+            ps_total, ps_rolls = core.roll_dice(str(ps_cal[x]))
             ps_cal[x] = ps_total
             step_text += str(ps_rolls)
         cal_text += str(ps_cal[x])
@@ -60,7 +60,7 @@ def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
         info = "：" + str(spell[2])
     except IndexError:
         info = ""  # if no info
-    d_result, d_rolls = core_cog.roll_dice("1d100")
+    d_result, d_rolls = core.roll_dice("1d100")
     if bp_flag == "b" or bp_flag == "p":
         bp_rolls = [random.randint(0, 9) for _ in range(bp_num)]
         d_comp = int(d_result) / 10
@@ -75,7 +75,7 @@ def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
             if p_comp > d_comp:
                 d_result = (p_comp * 10) + (org_result % 10)
         bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
-    check_result, flag = core_cog.coc_check(d_result, prob, cc_cmd)
+    check_result, flag = core.coc_check(d_result, prob, cc_cmd)
     return (f"CC {prob}{info}{bp_text}\n"
             f"{d_result} {flag} {prob}\n"
             f"結果：{check_result}")
@@ -103,7 +103,7 @@ def dd_main(msg, text2user =""):
                         f"{step_text} = {cal_text}\n"
                         f"={total_result}\n")
         else:
-            total, rolls = core_cog.roll_dice(dd_msg)
+            total, rolls = core.roll_dice(dd_msg)
             text2user = (f"#{x + 1} {dd_msg}{info}\n"
                         f"{rolls}\n"
                         f"={total}\n")
@@ -122,7 +122,7 @@ def sc_alg(flag, sc_suc, sc_fail, check_result):
                 num = int(parts[0])
                 sides = int(parts[1])
                 modi = int(parts[2]) if len(parts) > 2 else 0
-                deduct_t, deduct_r = core_cog.roll_dice(f"{num}d{sides}")
+                deduct_t, deduct_r = core.roll_dice(f"{num}d{sides}")
                 return sc_fmla, deduct_t + modi, f"{deduct_r}+{modi}"
             except (ValueError, IndexError):
                 pass
@@ -137,8 +137,8 @@ def sc_main(msg):
         sc_suc, sc_fail = spell[1].lower().split('/')
     except (IndexError, ValueError):
         return "格式錯誤！範例：.sc 50 1/1d6"
-    sc_value, _ = core_cog.roll_dice("1d100")
-    check_result, flag = core_cog.coc_check(sc_value, prob, "sc")
+    sc_value, _ = core.roll_dice("1d100")
+    check_result, flag = core.coc_check(sc_value, prob, "sc")
     sc_dice, deduct_t, deduct_r = sc_alg(flag, sc_suc, sc_fail, check_result)
     after_sc = max(0, prob - deduct_t)
     return (f"SAN {prob}：{sc_suc}/{sc_fail}\n"
@@ -216,15 +216,15 @@ def bd7_main(code):
         x, y, z = list(map(int, code))
 
     for i in range(x):
-        total, rolls = core_cog.roll_dice("3d6")
+        total, rolls = core.roll_dice("3d6")
         f_rolls.append(str(rolls) + "×5")
         f_total.append(str(total * 5))
     for i in range(y):
-        total, rolls = core_cog.roll_dice("2d6")
+        total, rolls = core.roll_dice("2d6")
         f_rolls.append("{" + str(rolls) + "+6}" + "×5")
         f_total.append(str((total + 6) * 5))
     for i in range(z):
-        total, rolls = core_cog.roll_dice("3d6")
+        total, rolls = core.roll_dice("3d6")
         f_rolls.append(str(rolls) + "×5")
         f_total.append(str(total * 5))
     if x == 5 and y == 3 and z == 1:
