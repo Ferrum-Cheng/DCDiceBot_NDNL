@@ -4,6 +4,9 @@ import logging
 from dotenv import load_dotenv
 import os
 import random
+
+import kp_cog
+import core_cog
 import webserver
 
 load_dotenv()
@@ -20,46 +23,6 @@ class MockMsg:
     def __init__(self, content):
         self.content = content
 
-def coc_check(d_result,prob,cmd):
-    if d_result == 1 and prob > 1:
-        check_result = "恭喜！大成功！"
-        flag = "≤"
-    elif d_result == 100:
-        check_result = "大失敗！"
-        flag = ">"
-    elif d_result >= 96 and cmd == "sc":
-        check_result = "大失敗！"
-        flag = ">"
-    elif d_result >= 96 and prob < 50 and cmd == "cc":
-        check_result = "技能值未達50！大失敗！"
-        flag = ">"
-    elif d_result > prob:
-        check_result = "失敗！"
-        flag = ">"
-    elif d_result <= int(prob / 5):
-        check_result = "極限成功！"
-        flag = "≤"
-    elif d_result <= int(prob / 2):
-        check_result = "困難成功！"
-        flag = "≤"
-    else:
-        check_result = "一般成功！"
-        flag = "≤"
-    return check_result, flag
-
-def roll_dice(dice_string):
-    try:
-        #xDy
-        x, y = map(int, dice_string.lower().split('d'))
-
-        #roll
-        rolls = [random.randint(1, y) for _ in range(x)]
-        total = sum(rolls)
-
-        return total, rolls
-    except ValueError:
-        return None, "Invalid format. Use XdY (e.g., 2d6)"
-
 def ps_handler(cal_text, step_text, sym):
     ps_cal = cal_text.split(str(sym))
     ps_step = step_text.split(str(sym))
@@ -68,7 +31,7 @@ def ps_handler(cal_text, step_text, sym):
         if "d" not in ps_cal[x]:
             step_text += str(ps_step[x])
         else:
-            ps_total, ps_rolls = roll_dice(str(ps_cal[x]))
+            ps_total, ps_rolls = core_cog.roll_dice(str(ps_cal[x]))
             ps_cal[x] = ps_total
             step_text += str(ps_rolls)
         cal_text += str(ps_cal[x])
@@ -92,12 +55,12 @@ def sym_handler(dd_msg):
 def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
     spell = msg.content.split(" ")
     cc_cmd = spell[0]
-    prob = int(spell[1])
+    prob = min(int(spell[1]),99)
     try:
         info = "：" + str(spell[2])
     except IndexError:
         info = ""  # if no info
-    d_result, d_rolls = roll_dice("1d100")
+    d_result, d_rolls = core_cog.roll_dice("1d100")
     if bp_flag == "b" or bp_flag == "p":
         bp_rolls = [random.randint(0, 9) for _ in range(bp_num)]
         d_comp = int(d_result) / 10
@@ -112,7 +75,7 @@ def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
             if p_comp > d_comp:
                 d_result = (p_comp * 10) + (org_result % 10)
         bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
-    check_result, flag = coc_check(d_result, prob, cc_cmd)
+    check_result, flag = core_cog.coc_check(d_result, prob, cc_cmd)
     return (f"CC {prob}{info}{bp_text}\n"
             f"{d_result} {flag} {prob}\n"
             f"結果：{check_result}")
@@ -140,69 +103,56 @@ def dd_main(msg, text2user =""):
                         f"{step_text} = {cal_text}\n"
                         f"={total_result}\n")
         else:
-            total, rolls = roll_dice(dd_msg)
+            total, rolls = core_cog.roll_dice(dd_msg)
             text2user = (f"#{x + 1} {dd_msg}{info}\n"
                         f"{rolls}\n"
                         f"={total}\n")
     return text2user
 
-def sc_alg(flag, sc_sus, sc_fail, check_result):
-    if flag == "≤":
-        sc_dice = sc_sus
-        if "d" not in sc_sus:
-            deduct_v = int(sc_sus)
-            deduct_r = "[" + str(deduct_v) + "]"
+def sc_alg(flag, sc_suc, sc_fail, check_result):
+    sc_fmla = sc_suc if flag == "≤" else sc_fail
+    if check_result == "大失敗！":
+        max_fmla = sc_fmla.lower().replace('d', '*') #replace d to * for cal
+        deduct_t = deduct_r = eval(max_fmla)
+        return f"最大值：{max_fmla}", deduct_t, deduct_r
+    else:
+        if 'd' in sc_fmla:
+            try:
+                parts = sc_fmla.lower().replace('+', 'd').split('d')
+                num = int(parts[0])
+                sides = int(parts[1])
+                modi = int(parts[2]) if len(parts) > 2 else 0
+                deduct_t, deduct_r = core_cog.roll_dice(f"{num}d{sides}")
+                return sc_fmla, deduct_t + modi, f"{deduct_r}+{modi}"
+            except (ValueError, IndexError):
+                pass
         else:
-            if ("+" or "-") in sc_sus:
-                cal_text, deduct_r, deduct_v = sym_handler(sc_sus)
-            else:
-                deduct_v, deduct_r = roll_dice(sc_sus)
-    elif flag == ">":
-        sc_dice = sc_fail
-        if "d" not in sc_fail:
-            deduct_v = int(sc_fail)
-            deduct_r = "[" + str(deduct_v) + "]"
-        else:
-            if check_result == "大失敗！":
-                sc_dice = sc_fail.lower().split('d')
-                try:
-                    cal_text = sc_dice.split('+')
-                except IndexError:
-                    cal_text[0] = sc_dice[1]
-                    cal_text[1] = 0
-                deduct_v = (int(cal_text[0]) * int(sc_dice[0])) + int(cal_text[1])
-                deduct_r = "[" + str(sc_dice[1]) + "]"
-                sc_dice = "最大值：" + str(deduct_v)
-            else:
-                if ("+" or "-") in sc_fail:
-                    cal_text, deduct_r, deduct_v = sym_handler(sc_fail)
-                else:
-                    deduct_v, deduct_r = roll_dice(sc_fail)
-    return sc_dice, deduct_r , deduct_v
+            deduct_t = deduct_r = eval(sc_fmla)
+            return sc_fmla, deduct_t, deduct_r
 
-def sc_fuction(msg):
-    spell = msg.content.split(" ")
-    sc_cmd = spell[0]
-    prob = int(spell[1])
-    sc_statement = spell[2].lower().split('/')
-    sc_sus = sc_statement[0]
-    sc_fail = sc_statement[1]
-    sc_value, sc_rolls = roll_dice("1d100")
-    check_result, flag = coc_check(sc_value, prob, sc_cmd)
-    sc_dice, deduct_r, deduct_v = sc_alg(flag, sc_sus, sc_fail, check_result)
-    after_sc = prob - deduct_v
-    return (f"San Check {prob}：{sc_sus}/{sc_fail}\n"
-                                   f"{sc_value} {flag} {prob}\n"
-                                   f"結果：{check_result}\n"
-                                   f"{sc_dice}     {deduct_r}\n"
-                                   f"{prob} - {deduct_v} → {after_sc}")
+def sc_main(msg):
+    try:
+        spell = msg.split(" ")
+        prob = min(int(spell[0]), 99)
+        sc_suc, sc_fail = spell[1].lower().split('/')
+    except (IndexError, ValueError):
+        return "格式錯誤！範例：.sc 50 1/1d6"
+    sc_value, _ = core_cog.roll_dice("1d100")
+    check_result, flag = core_cog.coc_check(sc_value, prob, "sc")
+    sc_dice, deduct_t, deduct_r = sc_alg(flag, sc_suc, sc_fail, check_result)
+    after_sc = max(0, prob - deduct_t)
+    return (f"SAN {prob}：{sc_suc}/{sc_fail}\n"
+            f"{sc_value} {flag} {prob}\n"
+            f"結果：{check_result}\n"
+            f"{sc_dice}     {deduct_r}\n"
+            f"{prob} - {deduct_t} → {after_sc}")
 
 def dr_proc(text):
     msg = MockMsg(text)
     if "cc" in text:
         text2user = cc_main(msg)
     elif "dd" in text:
-        text2user = sc_fuction(msg)
+        text2user = dd_main(msg)
     return text2user
 
 def ccrt_text(case_code):
@@ -266,15 +216,15 @@ def bd7_main(code):
         x, y, z = list(map(int, code))
 
     for i in range(x):
-        total, rolls = roll_dice("3d6")
+        total, rolls = core_cog.roll_dice("3d6")
         f_rolls.append(str(rolls) + "×5")
         f_total.append(str(total * 5))
     for i in range(y):
-        total, rolls = roll_dice("2d6")
+        total, rolls = core_cog.roll_dice("2d6")
         f_rolls.append("{" + str(rolls) + "+6}" + "×5")
         f_total.append(str((total + 6) * 5))
     for i in range(z):
-        total, rolls = roll_dice("3d6")
+        total, rolls = core_cog.roll_dice("3d6")
         f_rolls.append(str(rolls) + "×5")
         f_total.append(str(total * 5))
     if x == 5 and y == 3 and z == 1:
@@ -305,47 +255,40 @@ def bd7_main(code):
         buildtxt += f"=============\n"
     return buildtxt
 
-#manual
-@bot.command()
+@bot.command() #maunal
 async def man(ctx):
-    await ctx.send(f"# 使用教學\n"
-                   f"### dd [z] xDy±jDk (info)\n"
-                   f"普通擲骰z次(描述)\n"
-                   f"### cc [prob] (info)\n"
-                   f"CoC技能檢定(描述)\n"
-                   f"### sc [prob] xDy/jDk\n"
-                   f"SAN值檢定 成功/失敗\n"
-                   f"### .ccb [z] [prob] (info)\n"
-                   f"獎勵骰z枚\n"
-                   f"### .ccp [z] [prob] (info)\n"
-                   f"懲罰骰z枚\n"
-                   f"### .ccrt\n"
-                   f"暫時性瘋狂\n"
-                   f"### .ccsu\n"
-                   f"不定期瘋狂\n"
-                   f"### .sg [x_prob] [x_skill]/[y_prob] [y_skill]\n"
-                   f"成長檢定\n"
-                   f"### .ddr [cc_roll/dd_roll]\n"
-                   f"暗骰至KP及自己\n"
-                   f"### .dddr [cc_roll/dd_roll]\n"
-                   f"暗骰至KP\n"
-                   f"### .cc7bd (xyz)\n"
-                   f"CoC7th創角\n"
-                   f"### .mkKP\n"
-                   f"設定暗骰指向至自己[需有KP身份組]\n"
-                   f"### .rmKP\n"
-                   f"消暗骰指向[需有KP身份組]\n"
-                   f"### .shKP\n"
-                   f"查詢暗骰指向[需有TRPG身份組]\n"
-                   f"### .trpg\n"
-                   f"取得TRPG身份組\n"
-                   f"### .ntrpg\n"
-                   f"移除TRPG身份組\n")
+    with open("manual.md", "r", encoding="utf-8") as f:
+        man_content = f.read()
+    await ctx.send(man_content)
 
-grp_KP_mn = None
-grp_KP_id = 0
+@bot.command() #make KP
+@commands.has_role("KP")
+async def mkKP(ctx):
+    kp_cog.save_kp(ctx.guild.id, ctx.author.id)
+    await ctx.send(f"暗骰指向已設置至 {ctx.author.mention}")
+
+@bot.command() #remove KP
+@commands.has_role("KP")
+async def rmKP(ctx):
+    kp_cog.remove_kp(ctx.guild.id)
+    await ctx.send("暗骰指向已取消")
 
 @bot.command()
+@commands.has_role("TRPG")
+async def shKP(ctx):
+    kps = kp_cog.load_kps()
+    kp_id = kps.get(str(ctx.guild.id))
+
+    if kp_id is None:
+        await ctx.send("目前此伺服器沒有設定 KP。")
+    else:
+        kp_user = bot.get_user(int(kp_id))
+        if kp_user:
+            await ctx.send(f"當前伺服器的暗骰已設定至：{kp_user.mention}")
+        else:
+            await ctx.send(f"當前伺服器的 KP ID 為：{kp_id}")
+
+@bot.command() #get TRPG role
 async def trpg(ctx):
     role = discord.utils.get(ctx.guild.roles, name="TRPG")
     if role:
@@ -354,7 +297,7 @@ async def trpg(ctx):
     else:
         await ctx.send("伺服器上沒有TRPG身份組")
 
-@bot.command()
+@bot.command() #remove TRPG role
 async def ntrpg(ctx):
     role = discord.utils.get(ctx.guild.roles, name="TRPG")
     if role:
@@ -363,80 +306,49 @@ async def ntrpg(ctx):
     else:
         await ctx.send("伺服器上沒有TRPG身份組")
 
-@bot.command()
-@commands.has_role("KP")
-async def mkKP(ctx):
-    global grp_KP_mn, grp_KP_id
-    grp_KP_mn = ctx.author.mention
-    grp_KP_id = ctx.author.id
-    await ctx.send(f"暗骰指向已設置至{grp_KP_mn}")
+@bot.command() #dark roll
+async def dr(ctx, mode: str, *, text):
+    #s (self), k (KP), b (both)
+    text2user = dr_proc(text)
+    kps = kp_cog.load_kps()
+    kp_id = kps.get(str(ctx.guild.id))
 
-@bot.command()
-@commands.has_role("KP")
-async def rmKP(ctx):
-    global grp_KP_mn, grp_KP_id
-    grp_KP_mn = grp_KP_id = None
-    await ctx.send(f"暗骰指向已取消")
-
-@bot.command()
-@commands.has_role("TRPG")
-async def shKP(ctx):
-    if grp_KP_mn is None:
-        await ctx.send("沒有KP被設定")
-    else:
-        await ctx.send(f"暗骰已設定至{grp_KP_mn}")
-
-@bot.command()
-async def ddr(ctx, *, text):
-    if grp_KP_mn is None:
-        await ctx.send(f"沒有KP被設定")
-    else:
-        text2user = dr_proc(text)
-        KP = await bot.fetch_user(grp_KP_id)
-        await KP.send(f"{ctx.author.mention}的暗骰\n"
-                      f"{text2user}")
-        await ctx.author.send(f"{ctx.author.mention}的暗骰\n"
+    if mode in ['s', 'b']: #to User
+        await ctx.author.send(f"{ctx.author.name}的暗骰：\n"
                               f"{text2user}")
-        await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}及{ctx.author.mention}的DM")
+    if mode in ['k', 'b'] and kp_id: #to KP
+        KP = await bot.fetch_user(int(kp_id))
+        await KP.send(f"{ctx.author.name}的暗骰：\n"
+                           f"{text2user}")
+    await ctx.send("暗骰已傳送至DM")
 
-@bot.command()
-async def dddr(ctx, *, text):
-    if grp_KP_mn is None:
-        await ctx.send(f"沒有KP被設定")
-    else:
-        text2user = dr_proc(text)
-        KP = await bot.fetch_user(grp_KP_id)
-        await KP.send(f"{ctx.author.mention}的暗骰\n"
-                      f"{text2user}")
-        await ctx.send(f"{ctx.author.mention}的暗骰已傳送至{grp_KP_mn}的DM")
-
-@bot.command()
-async def ccb(ctx, *, text):
-    msg = text.split(" ")
-    b_num = int(msg[0])
-    spell = "cc " + str(msg[1])
-    try:
-        spell += " " + str(msg[2])
-    except IndexError:
-        spell += ""
-    text2user = cc_main(MockMsg(spell), "b", b_num)
+@bot.command() #cc benefit
+async def ccb(ctx, b_num: int, prob: int, info=""):
+    text2user = cc_main(MockMsg(f"cc {prob} {info}"), "b", b_num)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
-@bot.command()
-async def ccp(ctx, *, text):
-    msg = text.split(" ")
-    p_num = int(msg[0])
-    spell = "cc " + str(msg[1])
-    try:
-        spell += " " + str(msg[2])
-    except IndexError:
-        spell += ""
-    text2user = cc_main(MockMsg(spell), "p", p_num)
+@bot.command() #cc penalty
+async def ccp(ctx, b_num: int, prob: int, info=""):
+    text2user = cc_main(MockMsg(f"cc {prob} {info}"), "p", b_num)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
-@bot.command()
+@bot.command() #choice
+async def rand(ctx, *, text):
+    sel = text.split(" ")
+    code = random.randint(0, len(sel)-1)
+    await ctx.send(f"{ctx.author.mention}\n"
+                   f"1d{len(sel)} [{code+1}]\n"
+                   f"隨機結果：{sel[code]}")
+
+@bot.command() #san check
+async def sc(ctx, *, text):
+    text2user = sc_main(text)
+    await ctx.send(f"{ctx.author.mention}\n"
+                   f"{text2user}")
+
+@bot.command() #skill upgrade
 async def sg(ctx, *, text):
     text2user = ""
     skill = text.split("/")
@@ -458,7 +370,7 @@ async def sg(ctx, *, text):
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 
-@bot.command()
+@bot.command() #cc7 build
 async def cc7bd(ctx, text=""):
     text2user = bd7_main(text)
     await ctx.send(f"{ctx.author.mention}\n"
@@ -504,13 +416,6 @@ async def on_message(message):
     if message.content.startswith("cc"):
         msg = message
         text2user = cc_main(msg)
-        await message.channel.send(f"{message.author.mention}\n"
-                                   f"{text2user}")
-
-    #san check
-    if message.content.startswith("sc"):
-        msg = message
-        text2user = sc_fuction(msg)
         await message.channel.send(f"{message.author.mention}\n"
                                    f"{text2user}")
 
