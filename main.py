@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 import os
 import random
 
-import kp_cog
 import core
+import san
+import kpndr
 import webserver
 
 load_dotenv()
@@ -155,56 +156,6 @@ def dr_proc(text):
         text2user = dd_main(msg)
     return text2user
 
-def ccrt_text(case_code):
-    match case_code:
-        case 1:
-            return f"昏厥或尖叫"
-        case 2:
-            return f"驚慌失措地逃跑"
-        case 3:
-            return f"歇斯底里或情緒爆發(狂笑、哭泣等等)"
-        case 4:
-            return f"發出嬰兒般的咿呀聲，說話無條理、速語症、多語症"
-        case 5:
-            return f"強烈恐懼症，可能會定在當場不能動彈"
-        case 6:
-            return f"殺人傾向或自殺傾向"
-        case 7:
-            return f"出現幻覺或妄想症"
-        case 8:
-            return f"不自覺地模仿旁人的動作"
-        case 9:
-            return f"奇怪的食欲(泥土、黏土、人肉)"
-        case 10:
-            return f"恍惚(像胎兒一樣蜷縮起來，忘記一切)或緊張型精神分裂(對一切失去興趣，必須有別人引導，否則無法進行任何獨立行動)"
-        case _:
-            return None
-
-def ccsu_text(case_code):
-    match case_code:
-        case 1:
-            return f"記憶缺失、健忘(症)或恍惚/緊張症"
-        case 2:
-            return f"嚴重的恐懼症(可能逃跑，或將所有東西都看成害怕的東西)"
-        case 3:
-            return f"幻覺"
-        case 4:
-            return f"奇怪的性取向(裸露癖、女子淫狂/男子淫狂等)"
-        case 5:
-            return f"找到了某樣「幸運符」(把某樣飾品、器物甚至某人當作安全毯)，如果遠離就會一事無成"
-        case 6:
-            return f"無法控制地抽搐、顫抖，無法藉由語言或書寫交談"
-        case 7:
-            return f"精神性的失明、失聰，或某個肢體無法使用"
-        case 8:
-            return f"反應性精神障礙(語無倫次、幻覺、妄想症或行為異常)"
-        case 9:
-            return f"暫時的偏執狂"
-        case 10:
-            return f"強迫症(不停洗手、祈禱，以特定節奏走路，不願走在某些路面上，總是檢查子彈是否上膛等等)"
-        case _:
-            return None
-
 def bd7_main(code):
     f_total = []
     f_rolls = []
@@ -264,19 +215,19 @@ async def man(ctx):
 @bot.command() #make KP
 @commands.has_role("KP")
 async def mkKP(ctx):
-    kp_cog.save_kp(ctx.guild.id, ctx.author.id)
+    kpndr.save_kp(ctx.guild.id, ctx.author.id)
     await ctx.send(f"暗骰指向已設置至 {ctx.author.mention}")
 
 @bot.command() #remove KP
 @commands.has_role("KP")
 async def rmKP(ctx):
-    kp_cog.remove_kp(ctx.guild.id)
+    kpndr.remove_kp(ctx.guild.id)
     await ctx.send("暗骰指向已取消")
 
 @bot.command()
 @commands.has_role("TRPG")
 async def shKP(ctx):
-    kps = kp_cog.load_kps()
+    kps = kpndr.load_kps()
     kp_id = kps.get(str(ctx.guild.id))
 
     if kp_id is None:
@@ -310,7 +261,7 @@ async def ntrpg(ctx):
 async def dr(ctx, mode: str, *, text):
     #s (self), k (KP), b (both)
     text2user = dr_proc(text)
-    kps = kp_cog.load_kps()
+    kps = kpndr.load_kps()
     kp_id = kps.get(str(ctx.guild.id))
 
     if mode in ['s', 'b']: #to User
@@ -379,7 +330,7 @@ async def cc7bd(ctx, text=""):
 @bot.command()
 async def ccrt(ctx):
     case_code = random.randint(1, 10)
-    text2user = ccrt_text(case_code)
+    text2user = san.ccrt_text(case_code)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"#{case_code} "
                    f"{text2user}")
@@ -387,7 +338,7 @@ async def ccrt(ctx):
 @bot.command()
 async def ccsu(ctx):
     case_code = random.randint(1, 10)
-    text2user = ccsu_text(case_code)
+    text2user = san.ccsu_text(case_code)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"#{case_code} "
                    f"{text2user}")
