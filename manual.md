@@ -2,7 +2,7 @@
 ### 核心功能
 * **`cc [prob] (info)`** CoC技能檢定(描述)
 * **`dd [z] xdy±jdk (info)`** 普通擲骰z次(描述)
-* **`.rand [x] [y] [z]`** 隨機結果
+* **`.rand [x] [y] [z]`** 隨機自定義骰
 * **`.ccb [z] [prob] (info)`** 獎勵骰z枚(描述)
 * **`.ccp [z] [prob] (info)`** 懲罰骰z枚(描述)
 * **`.sg [x_prob] [x_skill]/[y_prob] [y_skill]`** 成長檢定
