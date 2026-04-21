@@ -32,7 +32,7 @@ def roll_dice(dice_string):
         return None, "Invalid format. Use XdY (e.g., 2d6)"
 
 def eval_dice(dice_str):
-    pattern = r'([+-]?)(\d+)d(\d+)|([+-]?)(\d+)'
+    pattern = r'([+-*/]?)(\d+)d(\d+)|([+-*/]?)(\d+)'
     matches = re.finditer(pattern, dice_str)
 
     total = 0
