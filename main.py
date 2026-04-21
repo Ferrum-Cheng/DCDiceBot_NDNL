@@ -113,19 +113,19 @@ async def ccsu(ctx):
 
 @bot.command() #make KP
 @commands.has_role("KP")
-async def mkKP(ctx):
+async def mkkp(ctx):
     kp.save_kp(ctx.guild.id, ctx.author.id)
     await ctx.send(f"暗骰指向已設置至 {ctx.author.mention}")
 
 @bot.command() #remove KP
 @commands.has_role("KP")
-async def rmKP(ctx):
+async def rmkp(ctx):
     kp.remove_kp(ctx.guild.id)
     await ctx.send("暗骰指向已取消")
 
 @bot.command()
 @commands.has_role("TRPG")
-async def shKP(ctx):
+async def shkp(ctx):
     kps = kp.load_kps()
     kp_id = kps.get(str(ctx.guild.id))
 
@@ -156,13 +156,13 @@ async def ntrpg(ctx):
     else:
         await ctx.send("伺服器上沒有TRPG身份組")
 
-@shKP.error
+@shkp.error
 async def TRPG_error(ctx, error):
     if isinstance(error, commands.MissingRole):
         await ctx.send(f"{ctx.author.mention}你不是TRPG玩家!")
 
-@mkKP.error
-@rmKP.error
+@mkkp.error
+@rmkp.error
 async def KP_error(ctx, error):
     if isinstance(error, commands.MissingRole):
         await ctx.send("你不是KP!")

@@ -8,9 +8,9 @@
 * **`.sg [x_prob] [x_skill]/[y_prob] [y_skill]`** 成長檢定
 * **`.cc7bd (xyz)`** CoC7th創角
 ### 暗骰相關
-* **`.mkKP`** 設定暗骰指向至自己 **需有KP身份組**
-* **`.rmKP`** 取消暗骰指向 **需有KP身份組**
-* **`.shKP`** 查詢暗骰指向 **需有TRPG身份組**
+* **`.mkkp`** 設定暗骰指向至自己 **需有KP身份組**
+* **`.rmkp`** 取消暗骰指向 **需有KP身份組**
+* **`.shkp`** 查詢暗骰指向 **需有TRPG身份組**
 * **`.dr [s/k/b] [cc_roll/dd_roll]`** 暗骰至自己/KP/KP及自己
 ### SAN與瘋狂
 * **`.sc [prob] xdy/jdk`** SAN值檢定 成功/失敗
