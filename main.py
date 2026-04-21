@@ -50,8 +50,8 @@ async def ccb(ctx, b_num: int, prob: int, info=""):
                    f"{text2user}")
 
 @bot.command() #cc penalty
-async def ccp(ctx, b_num: int, prob: int, info=""):
-    text2user = core.cc_main(core.MockMsg(f"cc {prob} {info}"), "p", b_num)
+async def ccp(ctx, p_num: int, prob: int, info=""):
+    text2user = core.cc_main(core.MockMsg(f"cc {prob} {info}"), "p", p_num)
     await ctx.send(f"{ctx.author.mention}\n"
                    f"{text2user}")
 

@@ -78,7 +78,7 @@ def cc_main(msg, bp_flag = None, bp_num = 0, bp_text =""):
                 d_result = (p_comp * 10) + (org_result % 10)
         bp_text = f"\n{org_result}{bp_flag}{bp_rolls}"
     check_result, flag = coc_check(d_result, prob, cc_cmd)
-    return (f"CC {prob}{info}{bp_text}\n"
+    return (f"CC {prob} {info}{bp_text}\n"
             f"{d_result} {flag} {prob}\n"
             f"結果：{check_result}")
 
@@ -94,7 +94,7 @@ def dd_main(msg, text2user =""):
         info = " ".join(spell[3:]) if len(spell) > 3 else ""
     for x in range(dd_times):
             total, rolls = eval_dice(dd_msg)
-            text2user += (f"#{x + 1} {dd_msg}{info}\n"
+            text2user += (f"#{x + 1} {dd_msg} {info}\n"
                           f"{rolls}\n"
                           f"={total}\n")
     return text2user
