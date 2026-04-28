@@ -32,10 +32,7 @@ def roll_dice(dice_string):
         return None, "Invalid format. Use XdY (e.g., 2d6)"
 
 def eval_dice(dice_str):
-    if "*" or "/" in dice_str:
-        return "錯誤，僅支援 +- 運算", "ERROR, ONLY SUPPORT +-"
-
-    pattern = r'([+-*/]?)(\d+)d(\d+)|([+-*/]?)(\d+)'
+    pattern = r'([+-]?)(\d+)d(\d+)|([+-]?)(\d+)'
     matches = re.finditer(pattern, dice_str)
 
     total = 0
